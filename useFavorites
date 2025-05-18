@@ -1,0 +1,69 @@
+// composables/useFavorites.ts
+export const useFavorites = () => {
+  const favorites = ref<any[]>([]);
+  const isLoading = ref(false);
+  const error = ref<string | null>(null);
+
+  const fetchFavorites = async () => {
+    isLoading.value = true;
+    error.value = null;
+
+    try {
+      const data = await $fetch('/api/v1/favorites');
+      favorites.value = data;
+    } catch (e) {
+      console.error('Error fetching favorites:', e);
+      error.value = 'Nie udało się pobrać ulubionych';
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  const addToFavorites = async (fixtureData: any) => {
+    try {
+      await $fetch('/api/v1/favorites', {
+        method: 'POST',
+        body: fixtureData,
+      });
+      await fetchFavorites();
+    } catch (e) {
+      console.error('Error adding to favorites:', e);
+      throw e;
+    }
+  };
+
+  const removeFromFavorites = async (id: string) => {
+    try {
+      await $fetch(`/api/v1/favorites?id=${id}`, {
+        method: 'DELETE',
+      });
+      await fetchFavorites();
+    } catch (e) {
+      console.error('Error removing from favorites:', e);
+      throw e;
+    }
+  };
+
+  const updateFavorite = async (id: string, data: any) => {
+    try {
+      await $fetch('/api/v1/favorites', {
+        method: 'PUT',
+        body: { id, ...data },
+      });
+      await fetchFavorites();
+    } catch (e) {
+      console.error('Error updating favorite:', e);
+      throw e;
+    }
+  };
+
+  return {
+    favorites,
+    isLoading,
+    error,
+    fetchFavorites,
+    addToFavorites,
+    removeFromFavorites,
+    updateFavorite,
+  };
+};
